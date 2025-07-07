@@ -96,7 +96,10 @@ if __name__ == '__main__':
         cosyvoice = CosyVoice(args.model_dir)
     except Exception:
         try:
-            cosyvoice = CosyVoice2(args.model_dir)
+            cosyvoice = CosyVoice2(
+                model_dir = args.model_dir,
+                spks_dir = args.spks_dir
+            )
         except Exception:
             raise TypeError('no valid model_type!')
     uvicorn.run(app, host="0.0.0.0", port=args.port)
