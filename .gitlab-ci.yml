@@ -1,0 +1,36 @@
+# 构建顺序1
+stages:
+  - build-and-push-tag
+  - build-and-push
+variables:
+  IMGNAME: solution/cosyvoice
+  ZZ_DOCKER_REGISTRY: zz-harbor.vastaitech.com
+
+build-and-push-tag:
+  stage: build-and-push-tag
+  script:
+    - echo 'tag build'
+    # - docker buildx create --name mybuilder # 在CI机器上已经创建,不需要再创建
+    - docker buildx use default
+    - docker buildx inspect default --bootstrap
+    # --platform linux/amd64,linux/arm64 , 可以指定多个平台
+    - docker buildx build --platform linux/amd64 -f ./docker/Dockerfile -t $ZZ_DOCKER_REGISTRY/$IMGNAME:${CI_COMMIT_TAG} . --push
+  # 匹配有该标签的Runner，必须指定
+  tags:
+  - zy-cpu-runner
+  only:
+    - tags
+
+build-and-push:
+  stage: build-and-push
+  script:
+    # - docker buildx create --name mybuilder # 在CI机器上已经创建,不需要再创建
+    - docker buildx use default
+    - docker buildx inspect default --bootstrap
+    # --platform linux/amd64,linux/arm64 , 可以指定多个平台
+    - docker buildx build --platform linux/amd64 -f ./docker/Dockerfile -t $ZZ_DOCKER_REGISTRY/$IMGNAME:${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA} . --push
+  # 匹配有该标签的Runner，必须指定
+  tags:
+  - zy-cpu-runner
+  except:
+    - tags
