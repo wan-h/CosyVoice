@@ -1,4 +1,4 @@
-## 镜像启动
+## 服务启动
 ``` sh
-docker run --privileged --name lit_cosyvoice -p 50000:50000 -v `pwd`:/workspace/Cosyvoice cosyvoice:latest --entrypoint python3 /workspace/Cosyvoice/runtime/fastapi/server_voice_clone.py
+python runtime/python/fastapi/server_voice_clone.py --model_dir /models/cosyvoice --spks_dir /opt/spks
 ```

@@ -63,8 +63,16 @@ async def add_spk_info(prompt_text: str = Form(), prompt_wav: UploadFile = File(
         return JSONResponse(status_code=200, content={'code': -1, 'message': str(e), 'data': ''})
 
 @app.post("/inference_zero_shot", response_model=BaseResponse, summary="inference zero shot")
-async def inference_zero_shot(spk_id: str = Form(), tts_text: str = Form()):
-    model_output = cosyvoice.inference_zero_shot(tts_text, '', '', spk_id)
+async def inference_zero_shot(spk_id: str = Form(), tts_text: str = Form(), speed: float = Form(1.0)):
+    model_output = cosyvoice.inference_zero_shot(
+        tts_text=tts_text, 
+        prompt_text='', 
+        prompt_speech_16k='', 
+        zero_shot_spk_id=spk_id,
+        stream=False,
+        speed=speed,
+        text_frontend=True
+    )
     output = BytesIO()
     for data in model_output:
         torchaudio.save(output, data['tts_speech'], cosyvoice.sample_rate, format='wav')
@@ -78,6 +86,10 @@ if __name__ == '__main__':
     parser.add_argument('--model_dir',
                         type=str,
                         default='pretrained_models/CosyVoice2-0.5B',
+                        help='local path or modelscope repo id')
+    parser.add_argument('--spks_dir',
+                        type=str,
+                        default='',
                         help='local path or modelscope repo id')
     args = parser.parse_args()
     try:
