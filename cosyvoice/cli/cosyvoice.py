@@ -43,6 +43,7 @@ class CosyVoice:
                                           '{}/campplus.onnx'.format(model_dir),
                                           '{}/speech_tokenizer_v1.onnx'.format(model_dir),
                                           '{}/spk2info.pt'.format(model_dir),
+                                          '{}/spks'.format(model_dir),
                                           configs['allowed_special'])
         self.sample_rate = configs['sample_rate']
         if torch.cuda.is_available() is False and (load_jit is True or load_trt is True or fp16 is True):
@@ -75,8 +76,15 @@ class CosyVoice:
         self.frontend.spk2info[zero_shot_spk_id] = model_input
         return True
 
-    def save_spkinfo(self):
-        torch.save(self.frontend.spk2info, '{}/spk2info.pt'.format(self.model_dir))
+    # def save_spkinfo(self):
+    #     torch.save(self.frontend.spk2info, '{}/spk2info.pt'.format(self.model_dir))
+    
+    def save_spkinfo(self, prompt_text, prompt_speech_16k, zero_shot_spk_id):
+        assert zero_shot_spk_id != '', 'do not use empty zero_shot_spk_id'
+        model_input = self.frontend.frontend_zero_shot('', prompt_text, prompt_speech_16k, self.sample_rate, '')
+        del model_input['text']
+        del model_input['text_len']
+        torch.save(model_input, '{}/spks/{}.pt'.format(self.model_dir, zero_shot_spk_id))
 
     def inference_sft(self, tts_text, spk_id, stream=False, speed=1.0, text_frontend=True):
         for i in tqdm(self.frontend.text_normalize(tts_text, split=True, text_frontend=text_frontend)):
@@ -158,6 +166,7 @@ class CosyVoice2(CosyVoice):
                                           '{}/campplus.onnx'.format(model_dir),
                                           '{}/speech_tokenizer_v2.onnx'.format(model_dir),
                                           '{}/spk2info.pt'.format(model_dir),
+                                          '{}/spks'.format(model_dir),
                                           configs['allowed_special'])
         self.sample_rate = configs['sample_rate']
         if torch.cuda.is_available() is False and (load_jit is True or load_trt is True or fp16 is True):

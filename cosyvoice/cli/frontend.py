@@ -44,9 +44,11 @@ class CosyVoiceFrontEnd:
                  campplus_model: str,
                  speech_tokenizer_model: str,
                  spk2info: str = '',
+                 spk_dir: str = '',
                  allowed_special: str = 'all'):
         self.tokenizer = get_tokenizer()
         self.feat_extractor = feat_extractor
+        self.spk_dir = spk_dir
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         option = onnxruntime.SessionOptions()
         option.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
@@ -118,6 +120,16 @@ class CosyVoiceFrontEnd:
         speech_feat_len = torch.tensor([speech_feat.shape[1]], dtype=torch.int32).to(self.device)
         return speech_feat, speech_feat_len
 
+    def _load_spk_info(self, spk_id):
+        if spk_id in self.spk2info:
+            return self.spk2info[spk_id]
+        spk_path = os.path.join(self.spk_dir, f'{spk_id}.pt')
+        if os.path.exists(spk_path):
+            spk_info = torch.load(spk_path, map_location=self.device)
+            return spk_info
+        else:
+            raise ValueError(f'spk_id {spk_id} not found in spk_info')
+
     def text_normalize(self, text, split=True, text_frontend=True):
         if isinstance(text, Generator):
             logging.info('get tts_text generator, will skip text_normalize!')
@@ -150,7 +162,7 @@ class CosyVoiceFrontEnd:
 
     def frontend_sft(self, tts_text, spk_id):
         tts_text_token, tts_text_token_len = self._extract_text_token(tts_text)
-        embedding = self.spk2info[spk_id]['embedding']
+        embedding = self._load_spk_info(spk_id)['embedding']
         model_input = {'text': tts_text_token, 'text_len': tts_text_token_len, 'llm_embedding': embedding, 'flow_embedding': embedding}
         return model_input
 
@@ -173,7 +185,7 @@ class CosyVoiceFrontEnd:
                            'prompt_speech_feat': speech_feat, 'prompt_speech_feat_len': speech_feat_len,
                            'llm_embedding': embedding, 'flow_embedding': embedding}
         else:
-            model_input = self.spk2info[zero_shot_spk_id]
+            model_input = self._load_spk_info(zero_shot_spk_id)
         model_input['text'] = tts_text_token
         model_input['text_len'] = tts_text_token_len
         return model_input
