@@ -1,4 +1,4 @@
-FROM crpi-8xfsvwwgxn02kpiu.cn-shanghai.personal.cr.aliyuncs.com/lit_algorithm/lmdeploy:v7-nvidia-cuda12.1-torch12.1-yolo
+FROM zz-harbor.vastaitech.com/lit_algorithm/lmdeploy:v7-nvidia-cuda12.1-torch12.1-yolo
 
 ARG VENV_NAME="cosyvoice"
 ENV VENV=$VENV_NAME
