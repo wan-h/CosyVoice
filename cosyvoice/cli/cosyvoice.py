@@ -26,7 +26,7 @@ from cosyvoice.utils.class_utils import get_model_type
 
 class CosyVoice:
 
-    def __init__(self, model_dir, load_jit=False, load_trt=False, fp16=False, trt_concurrent=1):
+    def __init__(self, model_dir, load_jit=False, load_trt=False, fp16=False, trt_concurrent=1, spks_dir=''):
         self.instruct = True if '-Instruct' in model_dir else False
         self.model_dir = model_dir
         self.fp16 = fp16
@@ -35,6 +35,7 @@ class CosyVoice:
         hyper_yaml_path = '{}/cosyvoice.yaml'.format(model_dir)
         if not os.path.exists(hyper_yaml_path):
             raise ValueError('{} not found!'.format(hyper_yaml_path))
+        self.spks_dir = model_dir if not spks_dir else spks_dir
         with open(hyper_yaml_path, 'r') as f:
             configs = load_hyperpyyaml(f)
         assert get_model_type(configs) != CosyVoice2Model, 'do not use {} for CosyVoice initialization!'.format(model_dir)
@@ -84,7 +85,7 @@ class CosyVoice:
         model_input = self.frontend.frontend_zero_shot('', prompt_text, prompt_speech_16k, self.sample_rate, '')
         del model_input['text']
         del model_input['text_len']
-        torch.save(model_input, '{}/spks/{}.pt'.format(self.model_dir, zero_shot_spk_id))
+        torch.save(model_input, '{}/{}.pt'.format(self.spks_dir, zero_shot_spk_id))
 
     def inference_sft(self, tts_text, spk_id, stream=False, speed=1.0, text_frontend=True):
         for i in tqdm(self.frontend.text_normalize(tts_text, split=True, text_frontend=text_frontend)):
@@ -162,7 +163,6 @@ class CosyVoice2(CosyVoice):
             configs = load_hyperpyyaml(f, overrides={'qwen_pretrain_path': os.path.join(model_dir, 'CosyVoice-BlankEN')})
         assert get_model_type(configs) == CosyVoice2Model, 'do not use {} for CosyVoice2 initialization!'.format(model_dir)
         self.spks_dir = '{}/spks'.format(model_dir) if not spks_dir else spks_dir
-
         self.frontend = CosyVoiceFrontEnd(configs['get_tokenizer'],
                                           configs['feat_extractor'],
                                           '{}/campplus.onnx'.format(model_dir),
