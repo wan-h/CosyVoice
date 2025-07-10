@@ -6,15 +6,26 @@ from locust import task, HttpUser, between
 
 class MyTestUser(HttpUser):
     # wait_time: locust 定义请求间隔
-    wait_time = between(0.1, 0.2)  # 模拟用户在执行每个任务之间等待的最小时间，单位为秒；
+    wait_time = between(2.0, 3.0)  # 模拟用户在执行每个任务之间等待的最小时间，单位为秒；
 
+    # @task
+    # def test_clone_tts(self):
+    #     payload = {
+    #         "spk_id": "a25c604e-f40d-4060-9d9d-3ae7b3864791",
+    #         "tts_text": """你好, 我是一个测试文本, 请你帮我合成语音。""",
+    #     }
+    #     resp = self.client.post('/inference_zero_shot', data=payload)
+    #     # 确保正常返回
+    #     resp = resp.json()
+    #     assert resp['code'] == 0
+    
     @task
-    def test_tts(self):
+    def test_clone_tts(self):
         payload = {
-            "spk_id": "a25c604e-f40d-4060-9d9d-3ae7b3864791",
+            "spk_id": "中文女",
             "tts_text": """你好, 我是一个测试文本, 请你帮我合成语音。""",
         }
-        resp = self.client.post('/inference_zero_shot', data=payload)
+        resp = self.client.post('/inference_sft', data=payload)
         # 确保正常返回
         resp = resp.json()
         assert resp['code'] == 0
