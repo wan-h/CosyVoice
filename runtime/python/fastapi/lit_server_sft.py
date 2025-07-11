@@ -94,10 +94,11 @@ def inference_sft(tts_text: str = Form(), spk_id: SFT_SPKS = Form(), speed: floa
     except Exception as e:
         return JSONResponse(status_code=200, content={'code': -1, 'message': str(e), 'data': ''})
 
-def initialize_cosyvoice_1(model_dir_1):
+def initialize_cosyvoice_1(model_dir_1 = 'pretrained_models/CosyVoice-300M-SFT'):
     global cosyvoice_1
     cosyvoice_1 = CosyVoice(model_dir_1)
 
+initialize_cosyvoice_1()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -122,6 +123,6 @@ if __name__ == '__main__':
                         help='universal worker num')
     args = parser.parse_args()
 
-    initialize_cosyvoice_1(args.model_dir_1)
+    
 
     uvicorn.run(app, host="0.0.0.0", port=args.port, workers=args.workers)
